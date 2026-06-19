@@ -5,6 +5,7 @@ import serial
 import struct
 import time
 import datetime
+import pygame
 
 SERIAL_PORT = "/dev/ttyUSB0"
 BAUDRATE = 1152000
@@ -24,6 +25,9 @@ def log_with_time(message):
     current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
     print(f"[{current_time}] {message}")
 
+def deadzone(v,threshold=0.05):
+    return 0 if abs(v) < threshold else v
+
 def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで、1バイトの整数を返す
     crc = 0x00
     for byte in data:
@@ -38,14 +42,29 @@ def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで�
 
 def main():
     model = YOLO("best_seg_openvino_model",task="segment")
+
     cap= cv2.VideoCapture(0,cv2.CAP_V4L2)
     cap.set(cv2.CAP_PROP_FPS,30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,SCREEN_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,SCREEN_HEIGHT)
+
     ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.0)
     time.sleep(2)
     newdistance = None
     alpha = 0.05
+
+    pygame.init()
+    pygame.joystick.init()
+
+    count = pygame.joystick.get_count()
+
+    if count == 0:
+        print("Controller not found")
+        exit()
+
+    joy = pygame.joystick.Joystick(0)
+    joy.init()
+
     if not cap.isOpened():
         print("❌ エラー: カメラを開くことができませんでした！ポート番号や接続を確認してください。")
         return
@@ -53,6 +72,15 @@ def main():
         print("✅ カメラのオープンに成功しました。ループを開始します。")
 
     while cap.isOpened():
+        pygame.event.pump()
+
+        leftX = deadzone(joy.get_axis(0))
+        leftY = deadzone(joy.get_axis(1))
+        rightX = deadzone(joy.get_axis(3))
+        rightY = deadzone(joy.get_axis(4))
+        rotL = deadzone(joy.get_axis(2))
+        rotR = deadzone(joy.get_axis(5))
+
         ret, frame = cap.read()
         if not ret:
             break
