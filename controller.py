@@ -1,5 +1,6 @@
 import pygame
 import time
+import serial
 
 def deadzone(v,threshold=0.05):
     return 0 if abs(v) < threshold else v
@@ -10,6 +11,9 @@ def main():
     pygame.joystick.init()
 
     count = pygame.joystick.get_count()
+
+    ser = serial.Serial
+
 
     if count == 0:
         print("Controller not found")
