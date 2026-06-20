@@ -46,8 +46,7 @@ def main():
     print("Axes:",joy.get_numaxes())
 
     while True:
-        for event in pygame.event.get():
-            print(event)
+        pygame.event.pump()
 
         leftX = deadzone(joy.get_axis(0))
         leftY = deadzone(joy.get_axis(1))
@@ -85,6 +84,9 @@ def main():
             if ser.in_waiting >0:
                 ser.reset_input_buffer()
 
+
+        time.sleep(0.01)
+        
 
 #左     横：axes 0、縦：axes 1、ボタン：axes 2、L：button 4
 #右     横：axes 3、縦：axes 4、ボタン：axes 5、R：button 5
