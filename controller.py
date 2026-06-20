@@ -5,6 +5,17 @@ import serial
 def deadzone(v,threshold=0.05):
     return 0 if abs(v) < threshold else v
 
+def calculateCRC(data: bytes) -> int:
+    crc = 0x00
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            if crc & 0x80:
+                crc = ((crc << 1) ^ 0x07) & 0xFF
+            else:
+                crc = (crc << 1) & 0xFF
+    return crc
+
 
 def main():
     pygame.init()
