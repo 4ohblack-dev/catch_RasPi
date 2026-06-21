@@ -4,12 +4,18 @@ import serial
 import struct
 
 SERIAL_PORT = "/dev/ttyUSB0"
-BAUDRATE = 1152000
+BAUDRATE = 115200
 
 HEADER = b'\xAA'
 DATA_FORMAT = '<fff'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
+OFFSET_Lx = 0
+OFFSET_Ly = 0
+OFFSET_Rx = 0
+OFFSET_Ry = 0
+OFFSET_Rro = -1
+OFFSET_Lro = -1
 
 def deadzone(v,threshold=0.05):
     return 0 if abs(v) < threshold else v
@@ -41,6 +47,11 @@ def main():
     joy = pygame.joystick.Joystick(0)
     joy.init()
 
+    OFFSET_Lx = deadzone(joy.get_axis(0))
+    OFFSET_Ly = deadzone(joy.get_axis(1))
+    OFFSET_Rx = deadzone(joy.get_axis(3))
+    OFFSET_Ry = deadzone(joy.get_axis(4))
+
     print("Name:",joy.get_name())
     print("Buttons:",joy.get_numbuttons())
     print("Axes:",joy.get_numaxes())
@@ -48,12 +59,12 @@ def main():
     while True:
         pygame.event.pump()
 
-        leftX = deadzone(joy.get_axis(0))
-        leftY = deadzone(joy.get_axis(1))
+        leftX = deadzone(joy.get_axis(0)) - OFFSET_Lx
+        leftY = deadzone(joy.get_axis(1)) - OFFSET_Ly
         rotL = deadzone(joy.get_axis(2))
 
-        rightX = deadzone(joy.get_axis(3))
-        rightY = deadzone(joy.get_axis(4))
+        rightX = deadzone(joy.get_axis(3)) - OFFSET_Rx
+        rightY = deadzone(joy.get_axis(4)) - OFFSET_Ry
         rotR = deadzone(joy.get_axis(5))
 
         #print(leftX)
@@ -85,7 +96,7 @@ def main():
                 ser.reset_input_buffer()
 
 
-        time.sleep(0.01)
+        time.sleep(0.005)
         
 
 #左     横：axes 0、縦：axes 1、ボタン：axes 2、L：button 4
